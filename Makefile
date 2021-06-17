@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -O3
+CFLAGS ?= -O3 -std=gnu99
 SnowFall:	SnowFall.c Makefile skein.o skein_block.o well.c
 		$(CC) $(CFLAGS) -lpthread -c -o SnowFall SnowFall.c skein.o skein_block.o
 
