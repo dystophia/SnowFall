@@ -1,0 +1,37 @@
+name: Smoketest (Debian)
+on: push
+
+jobs:
+  smoketest-debian:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - debian:jessie
+          - debian:stretch
+          - debian:buster
+          - debian:bullseye
+        compiler:
+          - gcc
+          - clang
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -qq
+          apt-get install -qq make ${{ matrix.compiler }}
+
+      - name: Make
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make

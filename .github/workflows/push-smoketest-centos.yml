@@ -1,0 +1,31 @@
+name: Smoketest (CentOS)
+on: push
+
+jobs:
+  smoketest-centos:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - centos:7
+          - centos:8
+        compiler:
+          - gcc
+          - clang
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: yum install -y make glibc-devel ${{ matrix.compiler }}
+
+      - name: Make
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make
