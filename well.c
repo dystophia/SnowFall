@@ -22,7 +22,7 @@ void setSeed(struct well *ctx, int32_t *seed, int seedLength) {
         ctx->index = 0;
 }
 
-void initWell(struct well *ctx, struct fieldInfo *info) {
+void initWell(struct well *ctx) {
         ctx->mixBuffer = (int32_t*)malloc(4540);
 	ctx->v = (int32_t*)malloc(CHARS);
         ctx->index  = 0;
@@ -39,7 +39,11 @@ void initWell(struct well *ctx, struct fieldInfo *info) {
             ctx->i2[j]   = (j + 481)  % INTS;
             ctx->i3[j]   = (j + 229)  % INTS;
         }
-	
+}
+
+void initWellState(struct well *ctx, struct fieldInfo *info) {
+	initWell(ctx);
+
 	unsigned char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
 	int fieldSeedBytes = sprintf(fieldSeed, "%s.%i", info->prefix, info->field);
 
@@ -61,6 +65,16 @@ void initWell(struct well *ctx, struct fieldInfo *info) {
 		t[i] = __builtin_bswap32(t[i]);
 
         setSeed(ctx, t, 32);
+}
+
+void writeState(struct well *ctx, int fd) {
+	writep(fd, (unsigned char*)&ctx->index, sizeof(ctx->index));
+	writep(fd, (unsigned char*)ctx->v, CHARS);
+}
+
+void readState(struct well *ctx, int fd) {
+	readp(fd, (unsigned char*)&ctx->index, sizeof(ctx->index));
+	readp(fd, (unsigned char*)ctx->v, CHARS);
 }
 
 void destroyWell(struct well *ctx) {

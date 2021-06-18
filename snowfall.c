@@ -1,93 +1,39 @@
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
-#include <sys/select.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#include "skein.h"
 #include "well.h"
 #include "util.h"
-#include "merkle.h"
 #include "monster.h"
+#include "snowfall.h"
 
 #define MULTIPLICITY		128
 #define PAGESIZE		(4*1024)
 #define WRITE_CHUNK		(1024 * 1024)
-
 #define PASSES                  7
 
-struct node {
-	uint64_t val;
-	struct node *left, *right;
-};
-
-void help() {
-	printf("--- SnowFall for SnowBlossom cryptocurrency ---\n");
-	printf("Usage: ./SnowFall [-f snowfield] [-d directory] [-t|-s] [-h]\n");
-	printf("\n");
-	printf("-f snowfield   Generate specific snowfield (default 0)\n");
-	printf("-d directory   Set target directory (default current directory)\n");
-	printf("-t             Generate teapot (Testnet) snowfield\n");
-	printf("-s             Generate spoon (Regtest) snowfield\n");
-	printf("-h             Print this help\n");
-	exit(0);
-}
-
-int main(int argc, char **argv) {
-	int field = 0;
-	int testnet = 0;
-	char *directory = ".";
-	
-	if(argc == 1)
-		help();
-
-	char mode = 0;
-	for(int i=1; i<argc; i++) {
-		if(argv[i][0] == '-')	
-			mode = argv[i][1];
-		else {
-			if(mode == 'f')
-				field = atoi(argv[i]);
-			if(mode == 'd') 
-				directory = argv[i];
-		}
-
-		if(mode == 's') // Spoon
-			testnet = 1;
-
-		if(mode == 't')	// Teapot
-			testnet = 2;
-	}
-
-	// Cut trailing /
-	if(directory[strlen(directory)-1] == '/')
-		directory[strlen(directory)-1] = 0;
-	
-
-
-	struct fieldInfo info;
-	getFieldInfo(&info, field, testnet);
-
-	if(info.name) {
-		printf("Starting SnowFall for field %i (%s), %u %s\n", field, info.name, info.gbytes, info.unit);
+void snowFall(unsigned char *directory, struct fieldInfo *info, int bootstrap) {
+	if(info->name) {
+		printf("Starting SnowFall for field %i (%s), %u %s\n", info->field, info->name, info->gbytes, info->unit);
 	} else {
-		printf("Starting SnowFall for field %i, %u %s\n", field, info.gbytes, info.unit);
+		printf("Starting SnowFall for field %i, %u %s\n", info->field, info->gbytes, info->unit);
 	}
 
-	uint64_t size = info.bytes;
-	uint64_t mb_count = size / WRITE_CHUNK;
-	uint64_t page_count = size / (uint64_t)PAGESIZE;
+	uint64_t mb_count = info->bytes / WRITE_CHUNK;
+	uint64_t page_count = info->bytes / (uint64_t)PAGESIZE;
         uint64_t writes = (page_count * (uint64_t)PASSES) / MULTIPLICITY;
 	
-	int fd = openFile(directory, &info, "snow");
+	int fd = openFile(directory, info, "snow");
+	
+	if(bootstrap)
+		bootstrap = openFile(directory, info, "boot");
 
+	// Prepare well
 	struct well w;
-	initWell(&w, &info);
+	initWellState(&w, info);
 	
 	// Prepare Snow Monster
 	struct snowMonster monster;
@@ -118,13 +64,19 @@ int main(int argc, char **argv) {
 			if(i % 1024 == 0) {
 				printf("%lu GiB written\r", i / 1024);
 				fflush(stdout);
+
+				if(bootstrap)
+					writeState(&w, bootstrap);
 			}
 		}
 
 		printf("Initial write completed. %lu GiB written.\n", mb_count / 1024);
 		free(writeBuffer);
 	}
+	if(bootstrap)
+		close(bootstrap);
 
+	//return;
 	// Step 2
 	{
 		unsigned char *writeBuffer = (unsigned char*)malloc(MULTIPLICITY * PAGESIZE);
@@ -176,7 +128,7 @@ int main(int argc, char **argv) {
 					} while(it);
 				}
 
-				//readahead(fd, nodes[m].val * PAGESIZE, PAGESIZE);
+				readahead(fd, nodes[m].val * PAGESIZE, PAGESIZE);
 			}
 			
 			for(int m=0; m<MULTIPLICITY; m++) {
@@ -216,11 +168,7 @@ int main(int argc, char **argv) {
 
 	destroyMonster(&monster);
 	destroyWell(&w);
-
 	close(fd);
-
 	printf("Snowfield creation finished    \n");
-
-	snowMerkle(directory, &info);	
 }
 

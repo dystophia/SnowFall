@@ -14,9 +14,12 @@ struct well {
         int32_t *i3;
 };
 
-void initWell(struct well *ctx, struct fieldInfo *info);
+void initWell(struct well *ctx);
+void initWellState(struct well *ctx, struct fieldInfo *info);
 void destroyWell(struct well *ctx);
 void fill(struct well *ctx, int32_t *target, int count);
 void mix(struct well *ctx, unsigned char *mix, int chunks);
+void writeState(struct well *ctx, int fd);
+void readState(struct well *ctx, int fd);
 
 #endif
