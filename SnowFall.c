@@ -1,11 +1,13 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "skein.h"
 #include "well.h"
@@ -39,7 +41,7 @@ void help() {
 int main(int argc, char **argv) {
 	int field = 0;
 	int testnet = 0;
-	char *directory = NULL;
+	char *directory = ".";
 	
 	if(argc == 1)
 		help();
@@ -61,6 +63,12 @@ int main(int argc, char **argv) {
 		if(mode == 't')	// Teapot
 			testnet = 2;
 	}
+
+	// Cut trailing /
+	if(directory[strlen(directory)-1] == '/')
+		directory[strlen(directory)-1] = 0;
+	
+
 
 	struct fieldInfo info;
 	getFieldInfo(&info, field, testnet);
@@ -142,15 +150,10 @@ int main(int argc, char **argv) {
 			}
 			fillMonster(&monster, &w);
 
-
 			for(int m=0; m<MULTIPLICITY; m++) {
-				uint64_t position = __builtin_bswap64(nodes[m].val) % page_count;
-				nodes[m].val = position;
+				nodes[m].val = __builtin_bswap64(nodes[m].val) % page_count;
 				nodes[m].left = NULL;
 				nodes[m].right = NULL;
-			}
-
-			for(int m=0; m<MULTIPLICITY; m++) {
 				if(m > 0) {
 					struct node *it = &nodes[0];
 					do {
@@ -173,7 +176,10 @@ int main(int argc, char **argv) {
 					} while(it);
 				}
 
-				int position = nodes[m].val * PAGESIZE;
+				//readahead(fd, nodes[m].val * PAGESIZE, PAGESIZE);
+			}
+			
+			for(int m=0; m<MULTIPLICITY; m++) {
 				int read = 0;
 				do {
 					int bytes = pread(fd, &existing[m * PAGESIZE + read], PAGESIZE - read, nodes[m].val * PAGESIZE + read);
@@ -183,9 +189,7 @@ int main(int argc, char **argv) {
 					}
 					read += bytes;
 				} while(read < PAGESIZE);
-			}
-			
-			for(int m=0; m<MULTIPLICITY; m++) {
+
 				mix(&w, &existing[m * PAGESIZE], 1024);
 
 				for(int i=0; i<PAGESIZE; i++)

@@ -64,7 +64,6 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 		do {
 			tn = (tn + 1) % nthreads;
 			if(work[tn].state) {
-				printf("catching %i\n", tn);
 				pthread_join(work[tn].thread, NULL);
 				if(work[tn].hashes == 1) {
 					printf("Calculated merkle root: ");
@@ -88,11 +87,8 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 			if(position >= size)
 				continue;
 
-			printf("Size: %lu\n", size);
 			position += readp(fd, work[tn].buffer, min(MERKLE_CHUNK, size));
-
 			work[tn].hashes = min(MERKLE_CHUNK, size) / SNOW_MERKLE_HASH_LEN;
-			printf("starting %i\n", tn);
 			pthread_create(&work[tn].thread, NULL, merkleThread, (void*)&work[tn]);
 			work[tn].state = 1;
 			tc = 0;
