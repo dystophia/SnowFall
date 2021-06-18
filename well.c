@@ -1,18 +1,14 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "well.h"
+#include "skein.h"
+#include "util.h"
 
 #define INTS	1391
 #define CHARS	(4*INTS)
-
-struct well {
-	int32_t *v;
-	uint32_t index;
-	uint32_t *iRm1;
-	uint32_t *iRm2;
-	int32_t *i1;
-	int32_t *i2;
-	int32_t *i3;
-};
 
 void setSeed(struct well *ctx, int32_t *seed, int seedLength) {
 	for(int i=0; i<seedLength; i++)
@@ -26,7 +22,8 @@ void setSeed(struct well *ctx, int32_t *seed, int seedLength) {
         ctx->index = 0;
 }
 
-void init(struct well *ctx, int32_t *seed) {
+void init(struct well *ctx, struct fieldInfo *info) {
+        ctx->mixBuffer = (int32_t*)malloc(4540);
 	ctx->v = (int32_t*)malloc(CHARS);
         ctx->index  = 0;
 
@@ -42,8 +39,52 @@ void init(struct well *ctx, int32_t *seed) {
             ctx->i2[j]   = (j + 481)  % INTS;
             ctx->i3[j]   = (j + 229)  % INTS;
         }
+	
+	char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
+	int fieldSeedBytes = sprintf(fieldSeed, "%s.%i", info->prefix, info->field);
 
-        setSeed(ctx, seed, 32);
+	printf("Seed: %s\n", fieldSeed);
+
+	// Initial hash
+	Skein1024_Ctxt_t x;
+	Skein1024_Init(&x, 1024);
+	Skein1024_Update(&x, fieldSeed, fieldSeedBytes);
+
+	free(fieldSeed);
+
+	char target[128];
+	Skein1024_Final(&x, target);
+
+	// convert to little endian
+	int32_t *t = (int32_t*)target;
+	for(int i=0; i<32; i++)
+		t[i] = __builtin_bswap32(t[i]);
+
+        setSeed(ctx, t, 32);
+}
+
+void destroy(struct well *ctx) {
+	free(ctx->mixBuffer);
+	free(ctx->v);
+	free(ctx->iRm1);
+	free(ctx->iRm2);
+	free(ctx->i1);
+	free(ctx->i2);
+	free(ctx->i3);
+}
+
+void mix(struct well *ctx, unsigned char *mix, int chunks) {
+        fill(ctx, ctx->mixBuffer, 1391 - chunks);
+
+        int32_t *mixInt = (int32_t*)mix;
+
+        for(int i=0; i<chunks; i++)
+                ctx->v[i] = __builtin_bswap32(mixInt[i]);
+
+        for(int i=chunks; i<1391; i++)
+                ctx->v[i] = __builtin_bswap32(ctx->mixBuffer[i-chunks]);
+
+        ctx->index = 0;
 }
 
 int32_t next(struct well *ctx) {
@@ -78,5 +119,4 @@ void fill(struct well *ctx, int32_t *target, int count) {
 	for(int i=0; i<count; i++)
 		target[i] = next(ctx);
 }
-
 
