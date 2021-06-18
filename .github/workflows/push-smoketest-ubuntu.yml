@@ -1,0 +1,40 @@
+name: Smoketest (Ubuntu)
+on: push
+
+jobs:
+  smoketest-ubuntu:
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ubuntu:14.04
+          - ubuntu:16.04
+          - ubuntu:18.04
+          - ubuntu:20.04
+          - ubuntu:20.10
+          - ubuntu:21.04
+          - ubuntu:21.10
+        compiler:
+          - gcc
+          - clang
+
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -qq
+          apt-get install -qq make ${{ matrix.compiler }}
+
+      - name: Make
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make
