@@ -1,8 +1,8 @@
 CC ?= gcc
 CFLAGS ?= -O2 -std=gnu99
 
-SnowFall:	SnowFall.c well.o skein.o skein_block.o merkle.o util.o
-		$(CC) $(CFLAGS) -o SnowFall SnowFall.c skein.o well.o skein_block.o util.o merkle.o -lpthread
+SnowFall:	SnowFall.c well.o skein.o skein_block.o merkle.o util.o monster.o
+		$(CC) $(CFLAGS) -o SnowFall SnowFall.c skein.o well.o skein_block.o util.o merkle.o monster.o -lpthread
 
 well.o:		well.c well.h
 		$(CC) $(CFLAGS) -c -o well.o well.c
@@ -15,6 +15,9 @@ util.o:		util.c util.h
 
 skein.o:	skein.c skein.h skein_port.h brg_types.h brg_endian.h skein_iv.h
 		$(CC) $(CFLAGS) -c -o skein.o skein.c
+
+monster.o:	monster.c monster.h
+		$(CC) $(CFLAGS) -c -o monster.o monster.c
 
 skein_block.o:	skein_block.c skein.h
 		$(CC) $(CFLAGS) -c -o skein_block.o skein_block.c

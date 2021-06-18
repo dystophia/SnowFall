@@ -22,7 +22,7 @@ void setSeed(struct well *ctx, int32_t *seed, int seedLength) {
         ctx->index = 0;
 }
 
-void init(struct well *ctx, struct fieldInfo *info) {
+void initWell(struct well *ctx, struct fieldInfo *info) {
         ctx->mixBuffer = (int32_t*)malloc(4540);
 	ctx->v = (int32_t*)malloc(CHARS);
         ctx->index  = 0;
@@ -40,7 +40,7 @@ void init(struct well *ctx, struct fieldInfo *info) {
             ctx->i3[j]   = (j + 229)  % INTS;
         }
 	
-	char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
+	unsigned char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
 	int fieldSeedBytes = sprintf(fieldSeed, "%s.%i", info->prefix, info->field);
 
 	printf("Seed: %s\n", fieldSeed);
@@ -52,7 +52,7 @@ void init(struct well *ctx, struct fieldInfo *info) {
 
 	free(fieldSeed);
 
-	char target[128];
+	unsigned char target[128];
 	Skein1024_Final(&x, target);
 
 	// convert to little endian
@@ -63,7 +63,7 @@ void init(struct well *ctx, struct fieldInfo *info) {
         setSeed(ctx, t, 32);
 }
 
-void destroy(struct well *ctx) {
+void destroyWell(struct well *ctx) {
 	free(ctx->mixBuffer);
 	free(ctx->v);
 	free(ctx->iRm1);

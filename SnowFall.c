@@ -11,41 +11,18 @@
 #include "well.h"
 #include "util.h"
 #include "merkle.h"
+#include "monster.h"
 
 #define MULTIPLICITY		128
 #define PAGESIZE		(4*1024)
-#define SNOWMONSTER_PAGESIZE	(PAGESIZE/4)
-#define SNOWMONSTER_COUNT	(268435456 / SNOWMONSTER_PAGESIZE)
 #define WRITE_CHUNK		(1024 * 1024)
 
-
 #define PASSES                  7
-
-
-struct snowMonster {
-	int32_t *buffer; // 256MB, divided in 262144 chunks
-	int position;
-	int filled;
-};
 
 struct node {
 	uint64_t val;
 	struct node *left, *right;
 };
-
-void fillMonster(struct snowMonster *monster, struct well *w) {
-	while(monster->filled < SNOWMONSTER_COUNT) {
-		fill(w, &monster->buffer[((monster->position + monster->filled) % SNOWMONSTER_COUNT) * 256], 256);
-		monster->filled++;
-	}
-}
-
-int32_t *getMonster(struct snowMonster *monster) {
-	int32_t *res = &(monster->buffer[monster->position * 256]);
-	monster->position = (monster->position + 1) % SNOWMONSTER_COUNT;
-	monster->filled--;
-	return res;
-}
 
 void help() {
 	printf("--- SnowFall for SnowBlossom cryptocurrency ---\n");
@@ -83,7 +60,6 @@ int main(int argc, char **argv) {
 
 		if(mode == 't')	// Teapot
 			testnet = 2;
-
 	}
 
 	struct fieldInfo info;
@@ -103,18 +79,11 @@ int main(int argc, char **argv) {
 	int fd = openFile(directory, &info, "snow");
 
 	struct well w;
-	init(&w, &info);
+	initWell(&w, &info);
 	
 	// Prepare Snow Monster
 	struct snowMonster monster;
-
-	monster.position = 0;
-	monster.filled = 0;
-	monster.buffer = (int32_t*)malloc(SNOWMONSTER_COUNT * SNOWMONSTER_PAGESIZE);
-	if(!monster.buffer) {
-		printf("Failed to allocate snowmonster memory\n");
-		exit(-1);
-	}
+	initMonster(&monster);
 
 	// Initial write
 	{
@@ -240,6 +209,9 @@ int main(int argc, char **argv) {
 		free(existing);
 		free(nodes);
 	}
+
+	destroyMonster(&monster);
+	destroyWell(&w);
 
 	close(fd);
 
