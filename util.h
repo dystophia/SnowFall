@@ -9,6 +9,7 @@ struct fieldInfo {
         char *name;
         char *root;
 	char *prefix;
+	char *unit;
 	uint64_t bytes;
 	uint32_t gbytes;
 };
@@ -18,7 +19,5 @@ int readp(int fd, unsigned char *buf, int n);
 void phex(void* mem, int size);
 int openFile(char *directory, struct fieldInfo *info, char *suffix);
 void getFieldInfo(struct fieldInfo *target, int field, int testnet);
-
-
 
 #endif

@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -O3 -std=gnu99
+CFLAGS ?= -O2 -std=gnu99
 
 SnowFall:	SnowFall.c well.o skein.o skein_block.o merkle.o util.o
 		$(CC) $(CFLAGS) -o SnowFall SnowFall.c skein.o well.o skein_block.o util.o merkle.o -lpthread

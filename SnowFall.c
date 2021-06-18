@@ -49,7 +49,13 @@ int32_t *getMonster(struct snowMonster *monster) {
 
 void help() {
 	printf("--- SnowFall for SnowBlossom cryptocurrency ---\n");
-	printf("Usage: ./SnowFall [-f snowfield] [-d directory] [-h]\n");
+	printf("Usage: ./SnowFall [-f snowfield] [-d directory] [-t|-s] [-h]\n");
+	printf("\n");
+	printf("-f snowfield   Generate specific snowfield (default 0)\n");
+	printf("-d directory   Set target directory (default current directory)\n");
+	printf("-t             Generate teapot (Testnet) snowfield\n");
+	printf("-s             Generate spoon (Regtest) snowfield\n");
+	printf("-h             Print this help\n");
 	exit(0);
 }
 
@@ -71,15 +77,22 @@ int main(int argc, char **argv) {
 			if(mode == 'd') 
 				directory = argv[i];
 		}
+
+		if(mode == 's') // Spoon
+			testnet = 1;
+
+		if(mode == 't')	// Teapot
+			testnet = 2;
+
 	}
 
 	struct fieldInfo info;
 	getFieldInfo(&info, field, testnet);
 
 	if(info.name) {
-		printf("Starting SnowFall for field %i (%s), %u GiB\n", field, info.name, info.gbytes);
+		printf("Starting SnowFall for field %i (%s), %u %s\n", field, info.name, info.gbytes, info.unit);
 	} else {
-		printf("Starting SnowFall for field %i, %u GiB\n", field, info.gbytes);
+		printf("Starting SnowFall for field %i, %u %s\n", field, info.gbytes, info.unit);
 	}
 
 	uint64_t size = info.bytes;

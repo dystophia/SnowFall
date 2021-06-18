@@ -52,7 +52,6 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 	int fd = openFile(directory, info, "snow");
 	uint64_t size = info->bytes;
 
-
 	int deckfd;
 	for(;;) {
 		deckfd = 0;
