@@ -44,7 +44,7 @@ void initWell(struct well *ctx) {
 void initWellState(struct well *ctx, struct fieldInfo *info) {
 	initWell(ctx);
 
-	unsigned char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
+	char *fieldSeed = (char*)malloc(strlen(info->prefix) + 5);
 	int fieldSeedBytes = sprintf(fieldSeed, "%s.%i", info->prefix, info->field);
 
 	printf("Seed: %s\n", fieldSeed);
@@ -52,7 +52,7 @@ void initWellState(struct well *ctx, struct fieldInfo *info) {
 	// Initial hash
 	Skein1024_Ctxt_t x;
 	Skein1024_Init(&x, 1024);
-	Skein1024_Update(&x, fieldSeed, fieldSeedBytes);
+	Skein1024_Update(&x, (unsigned char*)fieldSeed, fieldSeedBytes);
 
 	free(fieldSeed);
 

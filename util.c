@@ -22,12 +22,25 @@ int writep(int fd, unsigned char *buf, int n) {
 	return n;
 }
 
+int pwritep(int fd, unsigned char *buf, int n, uint64_t position) {
+        int w = 0;
+        do {
+                int bytes = pwrite(fd, &buf[w], n-w, position + w);
+                if(bytes < 1) {
+                        printf("Error writing                  \n");
+                        exit(-1);
+                }
+                w += bytes;
+        } while(w < n);
+	return n;
+}
+
 int readp(int fd, unsigned char *buf, int n) {
         int r = 0;
         do {
                 int bytes = read(fd, &buf[r], n-r);
                 if(bytes < 1) {
-                        printf("Error reading\n");
+                        printf("Error reading                  \n");
                         exit(-1);
                 }
                 r += bytes;
@@ -35,26 +48,30 @@ int readp(int fd, unsigned char *buf, int n) {
 	return n;
 }
 
-int openFile(char *directory, struct fieldInfo *info, char *suffix) {
+int openFile(char *directory, struct fieldInfo *info, char *suffix, int read) {
 	char *fileName = (char*)malloc(strlen(directory) + strlen(suffix) + 34);
 
 	// Create directory if needed:
-        sprintf(fileName, "%s/%s.%i", directory, info->prefix, info->field);
-	mkdir(fileName, 0755);
 
-        sprintf(fileName, "%s/%s.%i/%s.%i.%s", directory, info->prefix, info->field, info->prefix, info->field, suffix);
-	printf("Creating file %s\n", fileName);
+	int fd;
+	if(read) {
+        	sprintf(fileName, "bootstrap/%s.%i.%s", info->prefix, info->field, suffix);
+	        fd = open(fileName, O_RDONLY | __O_LARGEFILE);
+	} else {
+        	sprintf(fileName, "%s/%s.%i", directory, info->prefix, info->field);
+		mkdir(fileName, 0755);
 
-        int fd = open(fileName, O_RDWR | O_CREAT | __O_LARGEFILE, 0644);
-
-	if(!fd) {
-		printf("Error opening file %s\n", fileName);
-		free(fileName);
-		exit(-1);
+        	sprintf(fileName, "%s/%s.%i/%s.%i.%s", directory, info->prefix, info->field, info->prefix, info->field, suffix);
+		printf("Creating file %s\n", fileName);
+	        fd = open(fileName, O_RDWR | O_CREAT | __O_LARGEFILE, 0644);
+		if(!fd) {
+			printf("Error opening file %s\n", fileName);
+			free(fileName);
+			exit(-1);
+		}
 	}
 
 	free(fileName);
-
 	return fd;
 }
 
@@ -76,6 +93,7 @@ void getFieldInfo(struct fieldInfo *target, int field, int testnet) {
 	int fieldsDefined = 12;
 	char * fieldNames[] = {
 		"cricket",
+		"shrew",
 		"stoat",
 		"ocelot",
 		"pudu",

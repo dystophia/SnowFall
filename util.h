@@ -12,12 +12,14 @@ struct fieldInfo {
 	char *unit;
 	uint64_t bytes;
 	uint32_t gbytes;
+	int threads;
 };
 
 int writep(int fd, unsigned char *buf, int n);
+int pwritep(int fd, unsigned char *buf, int n, uint64_t position);
 int readp(int fd, unsigned char *buf, int n);
 void phex(void* mem, int size);
-int openFile(char *directory, struct fieldInfo *info, char *suffix);
+int openFile(char *directory, struct fieldInfo *info, char *suffix, int read);
 void getFieldInfo(struct fieldInfo *target, int field, int testnet);
 
 #endif

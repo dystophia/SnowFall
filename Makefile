@@ -1,5 +1,5 @@
 CC ?= gcc
-CFLAGS ?= -O3 -std=gnu99
+CFLAGS ?= -O3 -std=gnu99 -Wpointer-sign
 
 SnowFall:	main.c well.o skein.o skein_block.o merkle.o util.o monster.o snowfall.o
 		$(CC) $(CFLAGS) -o SnowFall main.c skein.o well.o skein_block.o util.o merkle.o monster.o snowfall.o -lpthread
@@ -26,4 +26,4 @@ skein_block.o:	skein_block.c skein.h
 		$(CC) $(CFLAGS) -c -o skein_block.o skein_block.c
 
 clean:
-		rm -f SnowFall skein_block.o skein.o well.o merkle.o util.o
+		rm -f SnowFall skein_block.o skein.o well.o merkle.o util.o snowfall.o monster.o

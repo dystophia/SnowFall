@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #include "skein.h"
 #include "well.h"
@@ -27,6 +28,8 @@ void help() {
 	printf("-d directory   Set target directory (default current directory)\n");
 	printf("-t             Generate teapot (Testnet) snowfield\n");
 	printf("-s             Generate spoon (Regtest) snowfield\n");
+	printf("-n             Generate from scratch, no bootstrap used\n");
+	printf("-c             Create bootstrap file\n");
 	printf("-h             Print this help\n");
 	exit(0);
 }
@@ -35,11 +38,15 @@ int main(int argc, char **argv) {
 	int field = 0;
 	int testnet = 0;
 	char *directory = ".";
-	
+	struct fieldInfo info;
+	info.threads = 32;
+
 	if(argc == 1)
 		help();
 
 	char mode = 0;
+	int fromScratch = 0;
+
 	for(int i=1; i<argc; i++) {
 		if(argv[i][0] == '-')	
 			mode = argv[i][1];
@@ -48,6 +55,8 @@ int main(int argc, char **argv) {
 				field = atoi(argv[i]);
 			if(mode == 'd') 
 				directory = argv[i];
+			if(mode == 'p')
+				info.threads = atoi(argv[i]);				
 		}
 
 		if(mode == 's') // Spoon
@@ -55,19 +64,32 @@ int main(int argc, char **argv) {
 
 		if(mode == 't')	// Teapot
 			testnet = 2;
+
+		if(mode == 'n') // From scratch
+			fromScratch = 1;
+
+		if(mode == 'c') // Create bootstrap file
+			fromScratch = 2;
 	}
 
 	// Cut trailing /
 	if(directory[strlen(directory)-1] == '/')
 		directory[strlen(directory)-1] = 0;
-	
 
-
-	struct fieldInfo info;
 	getFieldInfo(&info, field, testnet);
 
-	snowFall(directory, &info, 1);
-
-	snowMerkle(directory, &info);	
+	// Maximum of 32 threads, snowmonster limits us here
+	info.threads = min(32, info.threads);
+	
+	int bootfd = openFile(directory, &info, "boot", 1);
+	if(bootfd > 0 && !fromScratch) {
+		snowFallBoot(directory, &info, bootfd);
+		snowMerkle(directory, &info);
+	} else if(fromScratch == 1) {
+		snowFall(directory, &info);
+		snowMerkle(directory, &info);
+	} else {
+		createBoot(directory, &info);
+	}
 }
 

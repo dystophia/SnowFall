@@ -26,7 +26,6 @@ void fillMonster(struct snowMonster *ctx, struct well *w) {
 }
 
 int32_t *getMonster(struct snowMonster *ctx) {
-	//printf("Get %i\n", ctx->position);
 	int32_t *res = &(ctx->buffer[ctx->position * 256]);
         ctx->position = (ctx->position + 1) % SNOWMONSTER_COUNT;
         ctx->filled--;

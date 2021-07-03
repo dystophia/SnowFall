@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <sys/stat.h>
+#include <pthread.h>
 #include <sys/types.h>
 
 #include "merkle.h"
@@ -33,7 +33,7 @@ void *merkleThread(void *ptr) {
 
 void snowMerkle(char *directory, struct fieldInfo *info) {
 	char deck[] = "deck.a";
-	int nthreads = 64;
+	int nthreads = 16;
 
 	unsigned char *readBuffers = (unsigned char*)malloc(MERKLE_CHUNK * nthreads);
 	struct merkleWork *work = (struct merkleWork*)malloc(nthreads * sizeof(struct merkleWork));
@@ -43,7 +43,7 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 		exit(-1);
 	}
 
-	int fd = openFile(directory, info, "snow");
+	int fd = openFile(directory, info, "snow", 0);
 	uint64_t size = info->bytes;
 
 	int deckfd;
@@ -51,7 +51,7 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 		deckfd = 0;
 
 		if(size > 1024 * SNOW_MERKLE_HASH_LEN)
-			deckfd = openFile(directory, info, deck);
+			deckfd = openFile(directory, info, deck, 0);
 
 		uint64_t position = 0;
 		int tn = 0, tc = 0;
