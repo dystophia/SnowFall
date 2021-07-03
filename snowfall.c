@@ -38,6 +38,7 @@ void *initialStep(void *ptr) {
 		mix(work->w, (unsigned char*)location, 256);
 		fill(work->w, location, 256);
 	}
+	return NULL;
 }
 
 void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes, uint64_t page_count) {
