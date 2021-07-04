@@ -106,17 +106,17 @@ int32_t next(struct well *ctx) {
         uint32_t indexRm2 = ctx->iRm2[ctx->index];
 
         int32_t v0       = ctx->v[ctx->index];
-        int32_t vM1      = ctx->v[ctx->i1[ctx->index]];
+        uint32_t vM1      = ctx->v[ctx->i1[ctx->index]];
         int32_t vM2      = ctx->v[ctx->i2[ctx->index]];
         int32_t vM3      = ctx->v[ctx->i3[ctx->index]];
 
         int32_t z0       = (0xFFFF8000 & ctx->v[indexRm1]) ^ (0x00007FFF & ctx->v[indexRm2]);
-        int32_t z1       = (v0 ^ (v0 << 24))  ^ (vM1 ^ (((uint32_t)vM1) >> 30));
-        int32_t z2       = (vM2 ^ (vM2 << 10)) ^ (vM3 << 26);
+        uint32_t z1       = (v0 ^ (v0 << 24))  ^ (vM1 ^ (vM1 >> 30));
+        uint32_t z2       = (vM2 ^ (vM2 << 10)) ^ (vM3 << 26);
         int32_t z3       = z1      ^ z2;
-        int32_t z2Prime  = ((z2 << 9) ^ (((uint32_t)z2) >> 23)) & 0xfbffffff;
+        int32_t z2Prime  = ((z2 << 9) ^ (z2 >> 23)) & 0xfbffffff;
         int32_t z2Second = ((z2 & 0x00020000) != 0) ? (z2Prime ^ 0xb729fcec) : z2Prime;
-        int32_t z4       = z0 ^ (z1 ^ (((uint32_t)z1) >> 20)) ^ z2Second ^ z3;
+        int32_t z4       = z0 ^ (z1 ^ (z1 >> 20)) ^ z2Second ^ z3;
 
         ctx->v[ctx->index]= z3;
         ctx->v[indexRm1]  = z4;

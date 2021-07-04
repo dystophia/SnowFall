@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 	if(bootfd > 0 && !fromScratch) {
 		snowFallBoot(directory, &info, bootfd);
 		snowMerkle(directory, &info);
-	} else if(fromScratch == 1) {
+	} else if(fromScratch == 1 || bootfd < 1) {
 		snowFall(directory, &info);
 		snowMerkle(directory, &info);
 	} else {
