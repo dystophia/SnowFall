@@ -28,7 +28,7 @@ void *initialStep(void *ptr) {
 	struct workAssignment *work = (struct workAssignment*)ptr;
 
 	// Wrap around for Snowfield 9 and above
-	uint64_t base = work->offset % 32;
+	uint64_t base = work->offset % 256;
 
 	for(uint64_t i=0; i<1024; i++) {
 		fill(work->w, (int32_t*)work->writeBuffer, (WRITE_CHUNK / 4));
@@ -45,6 +45,8 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 	unsigned char *writeBuffer = (unsigned char*)malloc(MULTIPLICITY * PAGESIZE);
 	unsigned char *existing = (unsigned char*)malloc(MULTIPLICITY * PAGESIZE);
 	struct node *nodes = (struct node*)malloc(MULTIPLICITY * sizeof(struct node));
+
+	printf("Position: %i\n", monster->position);
 
 	if(!writeBuffer || !existing || !nodes) {
 		printf("Failed to allocate memory\n");
@@ -214,8 +216,9 @@ void snowFallBoot(char *directory, struct fieldInfo *info, int bootfd) {
 	// Continue with last segments state
 	nt = lastwell;
 	
-	monster.position = (execution_count % 32) * 1024;
+	monster.position = (execution_count % 256) * 1024;
 	
+
 	close(bootfd);
 
 	step2(fd, &w[nt], &monster, writes, page_count);
@@ -313,7 +316,6 @@ void snowFall(char *directory, struct fieldInfo *info) {
 	printf("Initial write completed. %lu GiB written.\n", mb_count >> 10);
 	free(writeBuffer);
 
-	printf("Monster position: %i filled: %i\n", monster.position, monster.filled);
 	step2(fd, &w, &monster, writes, page_count);
 }
 

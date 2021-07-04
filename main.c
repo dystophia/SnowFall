@@ -22,7 +22,7 @@
 
 void help() {
 	printf("--- SnowFall for SnowBlossom cryptocurrency ---\n");
-	printf("Usage: ./SnowFall [-f snowfield] [-d directory] [-t|-s] [-h]\n");
+	printf("Usage: ./SnowFall [-f snowfield] [-d directory] [-t|-s] [-n|-c] [-h]\n");
 	printf("\n");
 	printf("-f snowfield   Generate specific snowfield (default 0)\n");
 	printf("-d directory   Set target directory (default current directory)\n");
@@ -64,6 +64,9 @@ int main(int argc, char **argv) {
 
 		if(mode == 't')	// Teapot
 			testnet = 2;
+
+		if(mode == 'h')
+			help();
 
 		if(mode == 'n') // From scratch
 			fromScratch = 1;
