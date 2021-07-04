@@ -46,8 +46,6 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 	unsigned char *existing = (unsigned char*)malloc(MULTIPLICITY * PAGESIZE);
 	struct node *nodes = (struct node*)malloc(MULTIPLICITY * sizeof(struct node));
 
-	printf("Position: %i\n", monster->position);
-
 	if(!writeBuffer || !existing || !nodes) {
 		printf("Failed to allocate memory\n");
 		exit(-1);
