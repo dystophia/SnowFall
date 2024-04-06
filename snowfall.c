@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "well.h"
 #include "util.h"
@@ -53,11 +54,33 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 
 	int started = -1;
 
+	uint64_t last_step_time;
+
 	for(uint64_t run=0; run < writes; run++) {
 		if(run % 1024 == 0) {
+			struct timeval currentTime;
+			gettimeofday(&currentTime, NULL);
+			uint64_t this_step_time = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
+			
 			float percent = (100 * run) / (float)writes;
-			printf("Pass %lu of %lu (%.1f%%)\r", run, writes, percent);
+
+			if(run == 0) {
+				printf("Pass %lu of %lu (%.1f%%)\r", run, writes, percent);
+			} else {
+				uint64_t eta = (uint64_t)((this_step_time - last_step_time) * (writes - run)) / (1000000 * 1024);
+				int seconds = eta % 60;
+				eta -= seconds;
+				eta /= 60;
+				int minutes = eta % 60;
+				eta -= minutes;
+				eta /= 60;
+
+				printf("Pass %lu of %lu (%.1f%%) ETA %02d:%02d:%02d\r", run, writes, percent, eta, minutes, seconds);
+			}
 			fflush(stdout);
+
+			last_step_time = this_step_time;
+			
 		}
 
 		for(int m=0; m<MULTIPLICITY; m++) {
@@ -230,7 +253,15 @@ void createBoot(char *directory, struct fieldInfo *info) {
 	uint64_t page_count = info->bytes / (uint64_t)PAGESIZE;
         uint64_t writes = (page_count * (uint64_t)PASSES) / MULTIPLICITY;
 	
-	int bootstrap = openFile(directory, info, "boot", 0);
+	char fileName[100];
+
+        sprintf(fileName, "bootstrap/%s.%i.boot", info->prefix, info->field);
+	int bootstrap = open(fileName, O_WRONLY | O_CREAT | __O_LARGEFILE, 0644);
+
+	if(!bootstrap) {
+		printf("Unable to open bootstrap file %s\n", fileName);
+		exit(-1);
+	}
 
 	// Prepare well
 	struct well w;
