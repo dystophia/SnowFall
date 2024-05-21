@@ -87,10 +87,7 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 			mix(w, (unsigned char*)getMonster(monster), 256);
 			fill(w, (int32_t*)&(writeBuffer[m * PAGESIZE]), PAGESIZE / 4);
 			fill(w, (int32_t*)&(nodes[m]), 2);
-		}
-		fillMonster(monster, w);
 
-		for(int m=0; m<MULTIPLICITY; m++) {
 			nodes[m].val = __builtin_bswap64(nodes[m].val) % page_count;
 			nodes[m].left = NULL;
 			nodes[m].right = NULL;
@@ -118,6 +115,7 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 
 			readahead(fd, nodes[m].val * PAGESIZE, PAGESIZE);
 		}
+		fillMonster(monster, w);
 
 		for(int m=0; m<MULTIPLICITY; m++) {
 			int read = 0;
@@ -160,14 +158,14 @@ void step2(int fd, struct well *w, struct snowMonster *monster, uint64_t writes,
 }
 
 // Snowfall using bootstrap file
-void snowFallBoot(char *directory, struct fieldInfo *info, int bootfd) {
+void snowFallBoot(char *directory, struct fieldInfo *info, int bootfd, char *raw) {
 	showInformation(info);
 
 	uint64_t execution_count = info->bytes / WRITE_CHUNK / 1024;
 	uint64_t page_count = info->bytes / (uint64_t)PAGESIZE;
         uint64_t writes = (info->bytes / PAGESIZE * (uint64_t)PASSES) / MULTIPLICITY;
 	
-	int fd = openFile(directory, info, "snow", 0);
+	int fd = openFile(directory, info, "snow", 0, raw);
 	
 	// Prepare wells
 	struct well *w = (struct well*)malloc(sizeof(struct well) * info->threads);
@@ -298,14 +296,14 @@ void createBoot(char *directory, struct fieldInfo *info) {
 }
 
 // Create the snowfield without using a bootstrap file. 
-void snowFall(char *directory, struct fieldInfo *info) {
+void snowFall(char *directory, struct fieldInfo *info, char *raw) {
 	showInformation(info);
 
 	uint64_t mb_count = info->bytes / WRITE_CHUNK;
 	uint64_t page_count = info->bytes / (uint64_t)PAGESIZE;
         uint64_t writes = (page_count * (uint64_t)PASSES) / MULTIPLICITY;
 	
-	int fd = openFile(directory, info, "snow", 0);
+	int fd = openFile(directory, info, "snow", 0, raw);
 	
 	// Prepare well
 	struct well w;

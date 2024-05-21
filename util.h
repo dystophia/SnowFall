@@ -19,7 +19,7 @@ int writep(int fd, unsigned char *buf, int n);
 int pwritep(int fd, unsigned char *buf, int n, uint64_t position);
 int readp(int fd, unsigned char *buf, int n);
 void phex(void* mem, int size);
-int openFile(char *directory, struct fieldInfo *info, char *suffix, int read);
+int openFile(char *directory, struct fieldInfo *info, char *suffix, int read, char *raw);
 void getFieldInfo(struct fieldInfo *target, int field, int testnet);
 
 #endif

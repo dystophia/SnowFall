@@ -15,6 +15,6 @@ struct merkleWork {
 };
 
 void *merkleThread(void *ptr);
-void snowMerkle(char *directory, struct fieldInfo *info);
+void snowMerkle(char *directory, struct fieldInfo *info, char *raw);
 
 #endif

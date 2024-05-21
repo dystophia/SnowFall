@@ -20,8 +20,8 @@ struct workAssignment {
 };
 
 void showInformation(struct fieldInfo *info);
-void snowFall(char *directory, struct fieldInfo *info);
-void snowFallBoot(char *directory, struct fieldInfo *info, int bootfd);
+void snowFall(char *directory, struct fieldInfo *info, char *raw);
+void snowFallBoot(char *directory, struct fieldInfo *info, int bootfd, char *raw);
 void createBoot(char *directory, struct fieldInfo *info);
 void *initialStep(void *ptr);
 

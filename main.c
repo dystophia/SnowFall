@@ -26,6 +26,7 @@ void help() {
 	printf("\n");
 	printf("-f snowfield   Generate specific snowfield (default 0)\n");
 	printf("-d directory   Set target directory (default current directory)\n");
+	printf("-r blockdevice Use raw block device for snow file. Data on the device is overwritten, use with caution!\n");
 	printf("-t             Generate teapot (Testnet) snowfield\n");
 	printf("-s             Generate spoon (Regtest) snowfield\n");
 	printf("-n             Generate from scratch, no bootstrap used\n");
@@ -38,6 +39,7 @@ int main(int argc, char **argv) {
 	int field = 0;
 	int testnet = 0;
 	char *directory = ".";
+	char *raw = NULL;
 	struct fieldInfo info;
 	info.threads = 32;
 
@@ -55,6 +57,8 @@ int main(int argc, char **argv) {
 				field = atoi(argv[i]);
 			if(mode == 'd') 
 				directory = argv[i];
+			if(mode == 'r') 
+				raw = argv[i];
 			if(mode == 'p')
 				info.threads = atoi(argv[i]);				
 		}
@@ -84,15 +88,19 @@ int main(int argc, char **argv) {
 	// Maximum of 32 threads, snowmonster limits us here
 	info.threads = min(32, info.threads);
 	
-	int bootfd = openFile(directory, &info, "boot", 1);
+	int bootfd = openFile(directory, &info, "boot", 1, NULL);
 	if(bootfd > 0 && !fromScratch) {
-		snowFallBoot(directory, &info, bootfd);
-		snowMerkle(directory, &info);
+		snowFallBoot(directory, &info, bootfd, raw);
+		snowMerkle(directory, &info, raw);
 	} else if(fromScratch < 2) {
-		snowFall(directory, &info);
-		snowMerkle(directory, &info);
+		snowFall(directory, &info, raw);
+		snowMerkle(directory, &info, raw);
 	} else {
 		createBoot(directory, &info);
+	}
+	
+	if(raw && fromScratch != 2) {
+		printf("Snowfield created on block device %s.\nUse command\n\n  dd if=%s of=%s.%i.snow bs=1048576 count=%lu\n\nto copy the field.\n", raw, raw, info.prefix, info.field, info.bytes / 1048576);
 	}
 }
 

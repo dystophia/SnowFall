@@ -31,7 +31,7 @@ void *merkleThread(void *ptr) {
         return NULL;
 }
 
-void snowMerkle(char *directory, struct fieldInfo *info) {
+void snowMerkle(char *directory, struct fieldInfo *info, char *raw) {
 	char deck[] = "deck.a";
 	int nthreads = 16;
 
@@ -43,7 +43,7 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 		exit(-1);
 	}
 
-	int fd = openFile(directory, info, "snow", 0);
+	int fd = openFile(directory, info, "snow", 0, raw);
 	uint64_t size = info->bytes;
 
 	int deckfd;
@@ -51,7 +51,7 @@ void snowMerkle(char *directory, struct fieldInfo *info) {
 		deckfd = 0;
 
 		if(size > 1024 * SNOW_MERKLE_HASH_LEN)
-			deckfd = openFile(directory, info, deck, 0);
+			deckfd = openFile(directory, info, deck, 0, NULL);
 
 		uint64_t position = 0;
 		int tn = 0, tc = 0;

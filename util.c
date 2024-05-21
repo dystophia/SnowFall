@@ -48,13 +48,19 @@ int readp(int fd, unsigned char *buf, int n) {
 	return n;
 }
 
-int openFile(char *directory, struct fieldInfo *info, char *suffix, int read) {
+int openFile(char *directory, struct fieldInfo *info, char *suffix, int read, char *raw) {
 	char *fileName = (char*)malloc(strlen(directory) + strlen(suffix) + 34);
 
 	// Create directory if needed:
-
 	int fd;
-	if(read) {
+
+	if(raw) {
+		fd = open(raw, O_RDWR | __O_LARGEFILE);
+		if(!fd) {
+			printf("Error opening raw device %s\n", raw);
+			exit(-1);
+		}
+	} else if(read) {
         	sprintf(fileName, "bootstrap/%s.%i.%s", info->prefix, info->field, suffix);
 	        fd = open(fileName, O_RDONLY | __O_LARGEFILE);
 	} else {
